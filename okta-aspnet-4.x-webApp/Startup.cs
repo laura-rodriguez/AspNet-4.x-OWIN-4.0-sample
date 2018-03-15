@@ -11,6 +11,8 @@ using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
 using System.Linq;
+using IdentityModel.Client;
+using System.Security.Claims;
 
 [assembly: OwinStartup(typeof(okta_aspnet_4.x_webApp.Startup))]
 
@@ -18,10 +20,11 @@ namespace okta_aspnet_4.x_webApp
 {
     public class Startup
     {
-        string clientId = ConfigurationManager.AppSettings["ClientId"];
-        string redirectUrl = ConfigurationManager.AppSettings["redirectUrl"];
-        string authority = ConfigurationManager.AppSettings["Authority"];
-        string clientSecret = ConfigurationManager.AppSettings["ClientSecret"];
+        string clientId = ConfigurationManager.AppSettings["okta:ClientId"];
+        string redirectUri = ConfigurationManager.AppSettings["okta:RedirectUri"];
+        string authority = ConfigurationManager.AppSettings["okta:Authority"];
+        string clientSecret = ConfigurationManager.AppSettings["okta:ClientSecret"];
+        string postLogoutRedirectUri = ConfigurationManager.AppSettings["okta:PostLogoutRedirectUri"];
 
         /// <summary>
         /// Configure OWIN to use OpenIdConnect 
@@ -34,19 +37,47 @@ namespace okta_aspnet_4.x_webApp
             app.UseOpenIdConnectAuthentication(
                 new OpenIdConnectAuthenticationOptions
                 {
-                    // Sets the ClientId, authority, RedirectUri as obtained from web.config
                     ClientId = clientId,
                     ClientSecret = clientSecret,
                     Authority = authority,
-                    RedirectUri = redirectUrl,
-                    PostLogoutRedirectUri = redirectUrl,
-                    ResponseType = OpenIdConnectResponseType.Code,
+                    RedirectUri = redirectUri,
+                    ResponseType = OpenIdConnectResponseType.CodeIdToken,
                     Scope = OpenIdConnectScope.OpenIdProfile,
-                    
+                    PostLogoutRedirectUri = postLogoutRedirectUri,
+
                     Notifications = new OpenIdConnectAuthenticationNotifications
                     {
-                        AuthenticationFailed = this.OnAuthenticationFailed
-                    }
+                        AuthenticationFailed = this.OnAuthenticationFailed,
+
+                        SecurityTokenValidated = n =>
+                        {
+                            var tokenId = n.ProtocolMessage.IdToken;
+
+                            if (tokenId != null)
+                            {
+                                n.AuthenticationTicket.Identity.AddClaim(new Claim("id_token", tokenId));
+                            }
+
+                            return Task.FromResult(0);
+                        },
+
+                        RedirectToIdentityProvider = n =>
+                        {
+                            // if signing out, add the id_token_hint
+                            if (n.ProtocolMessage.RequestType == OpenIdConnectRequestType.Logout)
+                            {
+                                var idTokenHint = n.OwinContext.Authentication.User.FindFirst("id_token");
+
+                                if (idTokenHint != null)
+                                {
+                                    n.ProtocolMessage.IdTokenHint = idTokenHint.Value;
+                                }
+
+                            }
+
+                            return Task.FromResult(0);
+                        }
+                    },                    
                 }
             );
         }

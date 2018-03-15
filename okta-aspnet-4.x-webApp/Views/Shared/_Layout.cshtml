@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Updated OWIN</title>
+    <title>OWIN 4.0</title>
     <link href="~/Content/Site.css" rel="stylesheet" type="text/css" />
     <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <script src="~/Scripts/modernizr-2.6.2.js"></script>
@@ -29,7 +29,7 @@
                 {
                     <ul class="nav navbar-nav navbar-right">
                         <li>
-                            <p class="navbar-text">Hello, <b>@Context.User.Identity.Name</b></p>
+                            <p class="navbar-text">Hello, <b>@ViewBag.Username</b></p>
                         </li>
                         <li>@Html.ActionLink("View claims", "Claims", "Account")</li>
                         <li>

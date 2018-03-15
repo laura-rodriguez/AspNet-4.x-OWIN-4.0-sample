@@ -8,34 +8,26 @@ namespace okta_aspnet_4.x_webApp.Controllers
 {
     public class HomeController : Controller
     {
-        // GET: Home
         public ActionResult Index()
         {
+            var claim = HttpContext.GetOwinContext().Authentication.User.FindFirst("name");
+            ViewBag.Username = (claim != null) ? claim.Value : string.Empty;
+
             return View();
         }
 
-        /// <summary>
-        /// Send an OpenID Connect sign-in request.
-        /// Alternatively, you can just decorate the SignIn method with the [Authorize] attribute
-        /// </summary>
-        public void SignIn()
+        public ActionResult About()
         {
-            if (!Request.IsAuthenticated)
-            {
-                HttpContext.GetOwinContext().Authentication.Challenge(
-                    new AuthenticationProperties { RedirectUri = "/" },
-                    OpenIdConnectAuthenticationDefaults.AuthenticationType);
-            }
+            ViewBag.Message = "Your application description page.";
+
+            return View();
         }
 
-        /// <summary>
-        /// Send an OpenID Connect sign-out request.
-        /// </summary>
-        public void SignOut()
+        public ActionResult Contact()
         {
-            HttpContext.GetOwinContext().Authentication.SignOut(
-                OpenIdConnectAuthenticationDefaults.AuthenticationType,
-                CookieAuthenticationDefaults.AuthenticationType);
+            ViewBag.Message = "Your contact page.";
+
+            return View();
         }
     }
 }
