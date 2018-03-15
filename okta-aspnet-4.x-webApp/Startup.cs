@@ -3,15 +3,9 @@ using Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OpenIdConnect;
-using Microsoft.Owin.Security.Notifications;
-using System;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
-using System.Linq;
-using IdentityModel.Client;
 using System.Security.Claims;
 
 [assembly: OwinStartup(typeof(okta_aspnet_4.x_webApp.Startup))]
@@ -47,8 +41,6 @@ namespace okta_aspnet_4.x_webApp
 
                     Notifications = new OpenIdConnectAuthenticationNotifications
                     {
-                        AuthenticationFailed = this.OnAuthenticationFailed,
-
                         SecurityTokenValidated = n =>
                         {
                             var tokenId = n.ProtocolMessage.IdToken;
@@ -80,18 +72,6 @@ namespace okta_aspnet_4.x_webApp
                     },                    
                 }
             );
-        }
-
-        /// <summary>
-        /// Handle failed authentication requests by redirecting the user to the home page with an error in the query string
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        private Task OnAuthenticationFailed(AuthenticationFailedNotification<OpenIdConnectMessage, OpenIdConnectAuthenticationOptions> context)
-        {
-            context.HandleResponse();
-            context.Response.Redirect("/?errormessage=" + context.Exception.Message);
-            return Task.FromResult(0);
         }
     }
 }
